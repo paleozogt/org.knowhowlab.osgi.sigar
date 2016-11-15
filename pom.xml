@@ -16,14 +16,12 @@
   ~
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.knowhowlab.osgi</groupId>
     <artifactId>sigar</artifactId>
-    <version>1.6.5_01-SNAPSHOT</version>
+    <version>1.6.5_01</version>
     <packaging>bundle</packaging>
 
     <name>Hyperic Sigar OSGi bundle</name>
@@ -54,7 +52,7 @@
         <connection>scm:git:git@github.com:knowhowlab/org.knowhowlab.osgi.sigar.git</connection>
         <url>scm:git:git@github.com:knowhowlab/org.knowhowlab.osgi.sigar.git</url>
         <developerConnection>scm:git:git@github.com:knowhowlab/org.knowhowlab.osgi.sigar.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>1.6.5_01</tag>
     </scm>
 
     <properties>
