@@ -1,0 +1,164 @@
+diff --git a/bindings/java/hyperic_jni/jni-build.xml b/bindings/java/hyperic_jni/jni-build.xml
+index d4556c3a..dde30aa6 100644
+--- a/bindings/java/hyperic_jni/jni-build.xml
++++ b/bindings/java/hyperic_jni/jni-build.xml
+@@ -224,37 +224,25 @@
+     <antcall target="${jni.cc}" inheritRefs="true"/>
+   </target>
+ 
+-  <!-- run jni-cc twice {ppc,i386}, then feed both to lipo to build a universal binary -->
++  <!-- run jni-cc for each arch {x86_64}, then feed both to lipo to build a universal binary -->
+   <target name="uni-cc" if="jni.libarch">
+     <property name="shlib" value="${jni.objdir}/lib/lib${jni.libname}.dylib"/>
+ 
+-    <!-- ppc -->
+-    <echo message="build 'ppc' arch"/>
++    <!-- x86_64 -->
++    <echo message="build 'x86_64' arch"/>
+     <antcall target="jni-cc" inheritRefs="true">
+-      <param name="uni.arch" value="ppc"/>
++      <param name="uni.arch" value="x86_64"/>
+     </antcall>
+ 
+-    <copy file="${shlib}" tofile="${shlib}.ppc"/>
++    <copy file="${shlib}" tofile="${shlib}.x86_64"/>
+ 
+-    <!-- i386 -->
+-    <echo message="build 'i386' arch"/>
+-    <delete>
+-      <fileset dir="${jni.objdir}" includes="*.o"/>
+-    </delete>
+-
+-    <antcall target="jni-cc" inheritRefs="true">
+-      <param name="uni.arch" value="i386"/>
+-    </antcall>
+-
+-    <copy file="${shlib}" tofile="${shlib}.i386"/>
+-
+-    <echo message="lipo 'ppc'+'i386'"/>
++    <echo message="lipo 'x86_64'"/>
+     <exec executable="lipo">
+-      <arg line="-create ${shlib}.ppc ${shlib}.i386 -output ${jni.objdir}/lib/lib${jni.libname}.dylib"/>
++      <arg line="-create ${shlib}.x86_64 -output ${jni.objdir}/lib/lib${jni.libname}.dylib"/>
+     </exec>
+ 
+     <delete>
+-      <fileset dir="${jni.objdir}/lib" includes="*.ppc,*.i386"/>
++      <fileset dir="${jni.objdir}/lib" includes="*.x86_64"/>
+     </delete>
+   </target>
+ 
+@@ -375,13 +363,15 @@
+         <linkerarg value="-framework"/>
+         <linkerarg value="CoreServices"/>
+ 
++        <!-- for IOKit -->
++        <linkerarg value="-framework"/>
++        <linkerarg value="IOKit"/>
++
+         <linkerarg value="-sectcreate,__TEXT,__info_plist,${jni.info.plist}" if="jni.info.plist"/>
+ 
+         <libset if="jni.libset.libs"
+                 dir="${jni.libset.dir}"
+                 libs="${jni.libset.libs}"/>
+-
+-        <syslibset libs="IOKit"/>
+       </linker>
+ 
+       <!-- Freebsd -->
+diff --git a/bindings/java/hyperic_jni/src/org/hyperic/jni/ArchNameTask.java b/bindings/java/hyperic_jni/src/org/hyperic/jni/ArchNameTask.java
+index df3e0fad..4cf53924 100644
+--- a/bindings/java/hyperic_jni/src/org/hyperic/jni/ArchNameTask.java
++++ b/bindings/java/hyperic_jni/src/org/hyperic/jni/ArchNameTask.java
+@@ -90,8 +90,12 @@ public class ArchNameTask extends Task {
+         if (ArchLoader.IS_DARWIN) {
+             //default to most recent SDK
+             //MacOSX10.3.9.sdk, MacOSX10.4u.sdk, MacOSX10.5.sdk,etc.
+-            File[] sdks =
+-                new File("/Developer/SDKs").listFiles(new FileFilter() {
++            String sdkRoot = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs";
++            if (new File(sdkRoot).exists() == false) {
++                sdkRoot = "/Developer/SDKs";
++            }
++            File[] sdks = 
++                new File(sdkRoot).listFiles(new FileFilter() {
+                     public boolean accept(File file) {
+                         String name = file.getName();
+                         return
+@@ -99,6 +103,7 @@ public class ArchNameTask extends Task {
+                             name.endsWith(".sdk");
+                     }
+                 });
++
+             if (sdks != null) {
+                 Arrays.sort(sdks);
+                 String prop = "uni.sdk";
+diff --git a/src/os/darwin/darwin_sigar.c b/src/os/darwin/darwin_sigar.c
+index b4223fe2..80485ada 100644
+--- a/src/os/darwin/darwin_sigar.c
++++ b/src/os/darwin/darwin_sigar.c
+@@ -16,11 +16,6 @@
+  * limitations under the License.
+  */
+ 
+-#include "sigar.h"
+-#include "sigar_private.h"
+-#include "sigar_util.h"
+-#include "sigar_os.h"
+-
+ #include <sys/param.h>
+ #include <sys/mount.h>
+ #if !(defined(__FreeBSD__) && (__FreeBSD_version >= 800000))
+@@ -50,8 +45,7 @@
+ #endif
+ #include <mach-o/dyld.h>
+ #define __OPENTRANSPORTPROVIDERS__
+-#include <Gestalt.h>
+-#include <CFString.h>
++#include <CoreServices/CoreServices.h>
+ #include <CoreFoundation/CoreFoundation.h>
+ #include <IOKit/IOBSD.h>
+ #include <IOKit/IOKitLib.h>
+@@ -67,14 +61,6 @@
+ #include <stdio.h>
+ #endif
+ 
+-#if defined(__FreeBSD__) && (__FreeBSD_version >= 500013)
+-#define SIGAR_FREEBSD5_NFSSTAT
+-#include <nfsclient/nfs.h>
+-#include <nfsserver/nfs.h>
+-#else
+-#include <nfs/nfs.h>
+-#endif
+-
+ #include <sys/ioctl.h>
+ #include <sys/mount.h>
+ #include <sys/resource.h>
+@@ -87,6 +73,15 @@
+ #include <net/if_types.h>
+ #include <net/route.h>
+ #include <netinet/in.h>
++#include <netinet/if_ether.h>
++
++#if defined(__FreeBSD__) && (__FreeBSD_version >= 500013)
++#define SIGAR_FREEBSD5_NFSSTAT
++#include <nfsclient/nfs.h>
++#include <nfsserver/nfs.h>
++#else
++#include <nfs/nfs.h>
++#endif
+ 
+ #include <dirent.h>
+ #include <errno.h>
+@@ -112,6 +107,11 @@
+ #include <netinet/tcp_var.h>
+ #include <netinet/tcp_fsm.h>
+ 
++#include "sigar.h"
++#include "sigar_private.h"
++#include "sigar_util.h"
++#include "sigar_os.h"
++
+ #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
+ 
+ #ifdef __FreeBSD__

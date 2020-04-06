@@ -1,0 +1,32 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1586297040025
+Build-Jdk: 1.8.0_242
+Built-By: vsts
+Bundle-Description: Hyperic Sigar OSGi bundle
+Bundle-DocURL: http://knowhowlab.org
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Hyperic Sigar OSGi bundle
+Bundle-NativeCode: libsigar-arm-linux.so;osname=Linux;processor=ARM,libs
+ igar-aarch64-linux.so;osname=Linux;processor=AARCH64,libsigar-x86-linux
+ .so;osname=Linux;processor=i386;processor=x86,libsigar-amd64-linux.so;o
+ sname=Linux;processor=x86_64,libsigar-universal64-macosx.dylib;osname=m
+ acosx;processor=x86_64,sigar-amd64-winnt.dll;osname=Windows7;osname=Win
+ dows8;osname=Windows10;processor=x86_64,sigar-x86-winnt.dll;osname=Wind
+ ows7;osname=Windows8;osname=Windows10;processor=x86
+Bundle-SymbolicName: org.paleozogt.osgi.sigar
+Bundle-Vendor: Know-How Lab
+Bundle-Version: 1.6.5.02-SNAPSHOT
+Created-By: Apache Maven Bundle Plugin
+Embed-Dependency: *;scope=system;type=!pom;inline=true;artifactId=sigar
+Export-Package: org.hyperic.sigar;version="1.6.5";uses:="org.hyperic.sig
+ ar.jmx",org.hyperic.sigar.cmd;version="1.6.5";uses:="org.hyperic.sigar,
+ org.hyperic.sigar.shell,org.hyperic.sigar.util",org.hyperic.sigar.jmx;v
+ ersion="1.6.5";uses:="org.hyperic.sigar",org.hyperic.sigar.pager;versio
+ n="1.6.5",org.hyperic.sigar.ptql;version="1.6.5";uses:="org.hyperic.sig
+ ar",org.hyperic.sigar.shell;version="1.6.5";uses:="org.hyperic.sigar.pa
+ ger,org.hyperic.sigar.util",org.hyperic.sigar.util;version="1.6.5",org.
+ hyperic.sigar.vmware;version="1.6.5";uses:="org.hyperic.sigar",org.hype
+ ric.sigar.win32;version="1.6.5";uses:="org.hyperic.sigar"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.4))"
+Tool: Bnd-2.4.1.201501161923

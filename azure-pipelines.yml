@@ -1,0 +1,125 @@
+trigger:
+    - "*"
+
+jobs:
+    - job: linux
+      timeoutInMinutes: 0
+      pool:
+          vmImage: ubuntu-16.04
+      strategy:
+          maxParallel: 10
+          matrix:
+              x64:
+                  PLATFORM: manylinux1-x64
+              x86:
+                  PLATFORM: manylinux1-x86
+              arm:
+                  PLATFORM: linux-armv7a
+              arm64:
+                  PLATFORM: linux-arm64
+      steps:
+          - script: git submodule update --init --recursive
+
+          - script: ./build-linux.sh $(PLATFORM)
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: $(PLATFORM)
+                pathtoPublish: src
+
+    - job: windows
+      timeoutInMinutes: 0
+      pool:
+          vmImage: vs2017-win2016
+      strategy:
+          maxParallel: 10
+          matrix:
+              x64:
+                  ARCH: amd64
+                  PLATFORM: windows-x64
+              x86:
+                  ARCH: x86
+                  PLATFORM: windows-x86
+      variables:
+          # workaround for really old code
+          _CL_: /D_CRT_NON_CONFORMING_WCSTOK
+      steps:
+          - script: git submodule update --init --recursive
+
+          # workaround for really old code 
+          - bash: sed -i 's/#define snprintf _snprintf//g' sigar/src/os/win32/sigar_os.h
+          - bash: sed -i 's-<linkerarg value="/MACHINE:X64" if="jni.arch64"/>--g' sigar/bindings/java/hyperic_jni/jni-build.xml
+
+          - script: mkdir -p build
+          - script: |
+                pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+                for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
+                popd
+                call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" $(ARCH)
+                where cl
+                where link
+                ant build
+            workingDirectory: sigar/bindings/java
+
+          - script: cp sigar/bindings/java/sigar-bin/lib/*.dll src/main/resources/sigar-$(ARCH)-winnt.dll
+          - script: cp sigar/bindings/java/sigar-bin/lib/*.jar src/main/resources
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: $(PLATFORM)
+                pathtoPublish: src
+
+    - job: mac
+      timeoutInMinutes: 0
+      pool:
+          vmImage: macOS-10.14
+      strategy:
+          maxParallel: 10
+          matrix:
+              x64:
+                  PLATFORM: mac-x64
+      steps:
+          - script: git submodule update --init --recursive
+          - script: brew install ant
+
+          # workaround for really old code 
+          - script: git apply ../mac.patch
+            workingDirectory: sigar
+
+          - script: mkdir -p build
+          - script: ant build
+            workingDirectory: sigar/bindings/java
+
+          - script: cp sigar/bindings/java/sigar-bin/lib/*.dylib src/main/resources
+          - script: cp sigar/bindings/java/sigar-bin/lib/*.jar src/main/resources
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: $(PLATFORM)
+                pathtoPublish: src
+
+    - job: package
+      timeoutInMinutes: 0
+      pool:
+          vmImage: ubuntu-16.04
+      steps:
+          - script: sudo apt-get install -y maven
+   
+          - task: DownloadPipelineArtifact@2
+            inputs:
+                patterns: '**/*'
+                path: artifacts
+          - script: cp -r artifacts/*/* src
+          - script: ls -l src/main/resources
+
+          - script: mvn install -B
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: mvn
+                pathtoPublish: target
+          - task: PublishBuildArtifacts@1
+            inputs:
+                artifactName: sigar
+                pathtoPublish: src
+      dependsOn:
+          - linux
+          - windows
+          - mac

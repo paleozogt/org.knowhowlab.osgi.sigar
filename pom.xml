@@ -107,6 +107,7 @@
                         <Embed-Dependency>*;scope=system;type=!pom;inline=true;artifactId=sigar</Embed-Dependency>
                         <Bundle-NativeCode>
                             libsigar-arm-linux.so;osname=Linux;processor=ARM,
+                            libsigar-aarch64-linux.so;osname=Linux;processor=AARCH64,
                             libsigar-x86-linux.so;osname=Linux;processor=i386;processor=x86,
                             libsigar-amd64-linux.so;osname=Linux;processor=x86_64,
                             libsigar-universal64-macosx.dylib;osname=macosx;processor=x86_64,
