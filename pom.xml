@@ -19,7 +19,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.knowhowlab.osgi</groupId>
+    <groupId>org.paleozogt.osgi</groupId>
     <artifactId>sigar</artifactId>
     <version>1.6.5_02-SNAPSHOT</version>
     <packaging>bundle</packaging>
@@ -28,13 +28,6 @@
     <description>Hyperic Sigar OSGi bundle</description>
 
     <url>http://knowhowlab.org</url>
-
-    <developers>
-        <developer>
-            <name>Dmytro Pishchukhin</name>
-            <timezone>GMT+1</timezone>
-        </developer>
-    </developers>
 
     <organization>
         <name>Know-How Lab</name>
@@ -49,9 +42,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git@github.com:knowhowlab/org.knowhowlab.osgi.sigar.git</connection>
-        <url>scm:git:git@github.com:knowhowlab/org.knowhowlab.osgi.sigar.git</url>
-        <developerConnection>scm:git:git@github.com:knowhowlab/org.knowhowlab.osgi.sigar.git</developerConnection>
+        <connection>scm:git:git@github.com:paleozogt/org.knowhowlab.osgi.sigar.git</connection>
+        <url>scm:git:git@github.com:paleozogt/org.knowhowlab.osgi.sigar.git</url>
+        <developerConnection>scm:git:git@github.com:paleozogt/org.knowhowlab.osgi.sigar.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
